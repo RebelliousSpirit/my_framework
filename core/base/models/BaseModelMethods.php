@@ -56,7 +56,7 @@ abstract class BaseModelMethods
 
         }
 
-        $concat_table = $table && !$set['concat'] ? $table . '.' : '';
+        $concat_table = $table && !$set['no_concat'] ? $table . '.' : '';
 
         // если не пришли параметры с полями для выборки
         if (!isset($set['fields']) || !is_array($set['fields']) || !$set['fields']){

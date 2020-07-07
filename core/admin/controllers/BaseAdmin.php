@@ -7,6 +7,7 @@ use core\base\controllers\BaseController;
 use core\base\exceptions\RouteException;
 use core\base\settings\Settings;
 use libraries\FileEdit;
+use mysql_xdevapi\Table;
 
 /**
  * Базовый контроллер для производных контрллеров админ. части сайта.
@@ -19,6 +20,10 @@ use libraries\FileEdit;
  */
 abstract class BaseAdmin extends BaseController
 {
+
+    // текущие настройки сайта
+    protected $settings;
+
     // модель
     protected $model;
 
@@ -68,7 +73,7 @@ abstract class BaseAdmin extends BaseController
 
         // подключаем css и js
         $this->init(true);
-        // определяем текущее название сайта
+        // определяем текущее название сайта (выводится в ярлыке страницы в браузере)
         $this->title = 'my framework';
 
         // свойства можно изменить в расширениях, поэтому проводится проверка на наличии свойств
@@ -407,7 +412,7 @@ abstract class BaseAdmin extends BaseController
                 // если есть настройки валидации
                 if($validate){
 
-                    // если есть в натройках валидации параметры для проверки текущего поля
+                    // если есть в настройках валидации параметры для проверки текущего поля
                     if ($validate[$key]){
 
                         if ($this->translate[$key]){
@@ -664,4 +669,66 @@ abstract class BaseAdmin extends BaseController
         return false;
 
     }
+
+    /**
+     * Формирует данные для сортировки
+     * Вспомогательный метод
+     *
+     * @param $table
+     * @return array
+     * @throws RouteException
+     */
+    protected function createOrderData($table){
+
+        // данные о полях таблицы на которою ссылается текущая таблица
+        $columns = $this->model->showColumns($table);
+
+        if (!$columns) throw new RouteException('Отсутствуют поля таблицы' . $table);
+
+        $name= '';
+        $order_name = '';
+
+        if ($columns['name']){
+            $order_name = $name = 'name';
+        }else{// в противном случае ищем что-то содержащее 'name'
+            foreach ($columns as $key => $value){
+                if (strrpos($key, 'name') !== false){
+
+                    $order_name = $key;
+
+                    $name = $key . ' as name';
+
+                }
+            }
+
+            if (!$name) $name = $columns['id_row'] . ' as name';
+        }
+
+        $parent_id = '';
+        $order = [];
+
+        if ($columns['parent_id']) $order[] = 'parent_id';
+
+        if ($columns['menu_position']) $order[] = 'menu_position';
+        else $order[] = $order_name;
+
+        return compact('name', 'parent_id', 'order', 'columns');
+
+    }
+
+    protected function createManyToMany($settings = false){
+
+        if (!$settings) $settings = $this->settings ?: Settings::instance();
+
+        $manyToMany = $settings->get('manyToMany');
+        $blocks = $settings->get('blockNeedle');
+
+        if ($manyToMany){
+
+
+
+        }
+
+    }
+
 }

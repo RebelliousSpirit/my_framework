@@ -6,6 +6,11 @@ namespace core\admin\controllers;
 
 use core\base\settings\Settings;
 
+/**
+ * Отвечает за добавление данных в таблицы БД админ. части сайта
+ * Class addController
+ * @package core\admin\controllers
+ */
 class addController extends BaseAdmin
 {
 
@@ -54,6 +59,7 @@ class addController extends BaseAdmin
 
     /**
      * Вспомагательный метод для метода createForeignData
+     * Создает внешние свойства
      *
      * @param $arr - массив с данными о внешних ключах текущей таблицы
      * @param $rootItems -  массив с данными о таблицах, которые имеют корневую
@@ -66,22 +72,7 @@ class addController extends BaseAdmin
             $this->foreignData[$arr['COLUMN_NAME']][0]['name'] = $rootItems['name'];
         }
 
-        // данные о полях таблицы на котороу ссылается текущая таблица
-        $columns = $this->model->showColumns($arr['REFERENCED_TABLE_NAME']);
-
-        $name= '';
-
-        if ($columns['name']){
-            $name = 'name';
-        }else{
-            foreach ($columns as $key => $value){
-                if (strrpos($key, 'name') !== false){
-                    $name = $key . ' as name';
-                }
-            }
-
-            if (!$name) $name = $columns['id_row'] . ' as name';
-        }
+        $orderData = $this->createOrderData($arr['REFERENCED_TABLE_NAME']);
 
         // исключаем случай, когда внешнии ключи таблицы ссылаются на первичные ключи своей же таблицы
         // т.е таблица сслыается связана с собой же
@@ -93,9 +84,10 @@ class addController extends BaseAdmin
         }
 
         $foreign = $this->model->get($arr['REFERENCED_TABLE_NAME'],[
-            'fields' => [$arr['REFERENCED_COLUMN_NAME'] . ' as id', $name],
+            'fields' => [$arr['REFERENCED_COLUMN_NAME'] . ' as id', $orderData['name'], $orderData['parent_id']],
             'where' => $where,
             'operand' => $operand,
+            'order' => $orderData['order']
         ]);
 
         if($foreign){
