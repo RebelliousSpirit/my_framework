@@ -224,6 +224,7 @@ abstract class BaseAdmin extends BaseController
 
     /**
      * Формирует данные вывода в блоках контентной части страницы админки.
+     * Добавляет в свойство this-blocks новые элементы согласно полям таблицы
      *
      * @param bool $settings - настройки текущего сайта или его расширения
      */
@@ -250,7 +251,7 @@ abstract class BaseAdmin extends BaseController
         }
 
         $default = array_keys($blocks)[0];
-        // заполяем данные для формирования блоков
+        // заполняем данные для формирования блоков
         foreach ($this->columns as $name => $item) {
             if ($name === 'id_row') continue;
 
@@ -676,11 +677,27 @@ abstract class BaseAdmin extends BaseController
      *
      * @param $table
      * @return array
+     * [
+     *      'name' => 'name', // имя ячейки
+     *      'parent_id' => '',
+     *      'order' => ['parent_id', 'menu_position'],
+     *      'columns' => [
+     *          'id' => [
+     *             'Field' => 'id',
+     *              'Type' => 'int(11)',
+     *              'Null' => 'No',
+     *              'Key' => 'PRI',
+     *              'Default' => null,
+     *              'Extra' => 'auto_increment'
+     *          ],
+     *          id_row => 'id',
+     *      ]
+     * ]
      * @throws RouteException
      */
     protected function createOrderData($table){
 
-        // данные о полях таблицы на которою ссылается текущая таблица
+        // данные о полях таблицы
         $columns = $this->model->showColumns($table);
 
         if (!$columns) throw new RouteException('Отсутствуют поля таблицы' . $table);
@@ -707,7 +724,8 @@ abstract class BaseAdmin extends BaseController
         $parent_id = '';
         $order = [];
 
-        if ($columns['parent_id']) $order[] = 'parent_id';
+        if ($columns['parent_id'])
+            $order[] = $parent_id = 'parent_id';
 
         if ($columns['menu_position']) $order[] = 'menu_position';
         else $order[] = $order_name;
@@ -716,6 +734,15 @@ abstract class BaseAdmin extends BaseController
 
     }
 
+    /**
+     * Создает данные для создания связей по типу многие ко многим в админке сайта в разделе добавления.
+     * добавляет во внешнии данные(которые выводятся в View) $this->foreignData данные о полях таблицы, которые связаны
+     * с полями текущей таблицы.
+     * Так же
+     *
+     * @param bool $settings - настройки сайта или его расширения
+     * @throws RouteException
+     */
     protected function createManyToMany($settings = false){
 
         if (!$settings) $settings = $this->settings ?: Settings::instance();
@@ -725,7 +752,283 @@ abstract class BaseAdmin extends BaseController
 
         if ($manyToMany){
 
+            foreach ($manyToMany as $mTable => $tables){
 
+                // ключ текущей таблицы 'goods' в массиве(Например: ['goods', 'filters'])
+                $targetKey = array_search($this->table, $tables); // 0
+
+                if ($targetKey !== false){
+
+                    // ключ второй таблицы 'filters'(Например: ['goods', 'filters'])
+                    $otherKey = $targetKey ? 0 : 1; // 1
+
+                    $checkBoxList = $settings::get('templateArr')['checkbox_list'];
+
+                    if (!$checkBoxList || !in_array($tables[$otherKey], $checkBoxList)) continue;
+
+                    if (!$this->translate[$tables[$otherKey]]){
+
+                        if ($settings::get('projectTables')[$tables[$otherKey]])
+                            $this->translate[$tables[$otherKey]] = [$settings::get('projectTables')[$tables[$otherKey]]['name']];
+
+                    }
+
+                    $orderData = $this->createOrderData($tables[$otherKey]);
+
+                    // заполняем данные для формирования блока 'связи многие ко многим'
+                    $insert = false;
+
+
+                    if ($blocks){
+
+                        foreach ($blocks as $key => $items){
+
+                            // если объявили имя второй таблицы в настройках html-блоков
+                            if (in_array($tables[$otherKey], $items)){
+
+                                $this->blocks[$key][] = $tables[$otherKey];
+                                $insert = true;
+                                break;
+
+                            }
+
+                        }
+
+                    }
+
+                    if (!$insert) $this->blocks[array_keys($this->blocks)[0]][] = $tables[$otherKey];
+
+                    // хранит id второй таблицы полученные из таблицы "многие ко многим"
+                    $foreign = [];
+
+                    if ($this->data){
+
+                        $res = $this->model->get($mTable, [
+                            'fields' => [$tables[$otherKey] . '_' . $orderData['columns']['id_row']],
+                            'where' => [$this->table . '_' . $this->columns['id_row'] = $this->data[$this->columns['id_row']]],
+                        ]);
+
+                        if ($res){
+
+                            foreach ($res as $item){
+
+                                $foreign[] = $item[$tables[$otherKey]] . '_' . $orderData['columns']['id_row'];
+
+                            }
+
+                        }
+
+                    }
+
+                    // если в настройках для связи записей таблиц БД по типу многие ко многим
+                    // указана опция отображения типов полей
+                    if (isset($tables['type'])){
+
+                        $data = $this->model->get($tables[$otherKey], [
+                            'fields' => [
+                                $orderData['columns']['id_row'] . ' as id',
+                                $orderData['name'],
+                                $orderData['parent_id']
+                            ],
+                            'order' => $orderData['order']
+                        ]);
+
+
+                        if ($data){
+
+                            foreach ($data as $item){
+
+                                // если нужно выбрать только корневые типы полей
+                                if ($tables['type'] === 'root' && $orderData['parent_id']){
+
+                                    // если это корневой тип поля
+                                    if ($item[$orderData['parent_id']] === null)
+                                        // дублируем название таблицы для последующего удобного вывода в шаблоне
+                                        $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['sub'][] = $item;
+
+                                // если нужно выбрать только зависимые типы полей(потомков)
+                                } elseif ($tables['type'] === 'child' && $orderData['parent_id']){
+
+                                    // если это потомок
+                                    if ($item[$orderData['parent_id']] !== null)
+                                        $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['sub'][] = $item;
+
+                                } else {
+                                    $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['sub'][] = $item;
+                                }
+
+                            }
+
+                        }
+
+                    } elseif ($orderData['parent_id']){ // если поля таблицы связаны по внешнему ключу с первичными
+                                                        // ключами полей своей таблицы, либо другой таблицы
+
+                        // сначало родительской таблицей является сама таблица т.к ее поля ссылаются сами на себя
+                        $parent = $tables[$otherKey];
+
+                        // false если нет родительской таблицы, true если есть
+                        $keys = $this->model->showForeignKeys($tables[$otherKey]);
+
+                        // есои есть данные о внешнем ключе, то родительской таблицей будет другая таблица
+                        if ($keys){
+
+                            foreach ($keys as $item){
+
+                                if ($item['COLUMN_NAME'] === 'parent_id'){
+
+                                    $parent = $item['REFERENCED_TABLE_NAME'];
+
+                                    break;
+
+                                }
+
+                            }
+
+                        }
+
+                        // если поля таблицы сслылаются на поля своей же таблицы
+                        if ($parent === $tables[$otherKey]){
+
+                            $data = $this->model->get($tables[$otherKey], [
+                                'fields' => [
+                                    $orderData['columns']['id_row'] . ' as id',
+                                    $orderData['name'],
+                                    $orderData['parent_id']
+                                ],
+                                'order' => $orderData['order']
+                            ]);
+
+                            if ($data){
+
+                                while (($key = key($data)) !== null){
+
+                                    // если у этого поля нет parent_id(внешний ключ)
+                                    if (!$data[$key]['parent_id']){
+
+                                        $this->foreignData[$tables[$otherKey]][$data[$key]['id']]['name'] = $data[$key]['name'];
+                                        // убираем эту ячейку массива т.к на теперь не нужна
+                                        unset($data[$key]);
+                                        // сбрасываем указатель на начальный этап
+                                        reset($data);
+                                        continue;
+
+                                    } else {
+                                        // ['filters']['1']['parent_id']
+                                        if($this->foreignData[$tables[$otherKey]][$data[$key][$orderData['parent_id']]]){
+
+                                            // ['filters']['1']['parent_id']['sub']['11'] = [];
+                                            $this->foreignData[$tables[$otherKey]][$data[$key][$orderData['parent_id']]]['sub'][$data[$key]['id']] = $data[$key];
+
+                                            if (in_array($data[$key]['id'], $foreign))
+                                                $this->foreignData[$tables[$otherKey]][$data[$key][$orderData['parent_id']]][] = $data[$key]['id'];
+
+                                            // убираем эту ячейку массива т.к на теперь не нужна
+                                            unset($data[$key]);
+                                            // сбрасываем указатель на начальный этап
+                                            reset($data);
+                                            continue;
+
+                                        }else{
+
+                                            foreach ($this->foreignData[$tables[$otherKey]] as $id => $item){
+
+                                                $parent_id = $data[$key][$orderData['parent_id']];
+
+                                                if (isset($item['sub']) && $item['sub'] && isset($item['sub'][$parent_id])){
+
+                                                    $this->foreignData[$tables[$otherKey]][$id]['sub'][$data[$key]['id']] = $data[$key];
+
+                                                    if (in_array($data[$key]['id'], $foreign))
+                                                        $this->data[$tables[$otherKey]][$id][] = $data[$key]['id'];
+
+                                                    // убираем эту ячейку массива т.к на теперь не нужна
+                                                    unset($data[$key]);
+                                                    // сбрасываем указатель на начальный этап
+                                                    reset($data);
+                                                    // возвращаемся на 2 уровень цикла
+                                                    continue 2;
+
+                                                }
+
+                                            }
+
+                                        }
+
+                                        next($data);
+
+                                    }
+
+                                }
+
+                            }
+
+
+                        }else{ // если поля по внешним ключам ссылаются на первичные ключи полей другой таблицы
+
+                            $parentOrderData = $this->createOrderData($parent);
+
+                            $data = $this->model->get($parent, [
+                                'fields' => [$parentOrderData['name']],
+                                'join' => [
+                                    $tables[$otherKey] => [
+                                        'fields' => [$orderData['columns']['id_row'] . ' as id', $orderData['name']],
+                                        'on' => [$parentOrderData['columns']['id_row'], $orderData['parent_id']]
+                                    ]
+                                ],
+                                'join_structure' => true
+                            ]);
+
+                            foreach ($data as $key => $item){
+
+                                if (isset($item['join'][$tables[$otherKey]]) && $item['join'][$tables[$otherKey]]){
+
+                                    $this->foreignData[$tables[$otherKey]][$key]['name'] = $item['name'];
+                                    $this->foreignData[$tables[$otherKey]][$key]['sub'] = $item['join'][$tables[$otherKey]];
+
+                                    foreach ($item['join'][$tables[$otherKey]] as $value){
+
+                                        if (in_array($value['id'], $foreign))
+                                            $this->data[$tables[$otherKey]][$key][] = $value['id'];
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }else{ // если таблица не имеет внешнего ключа, то просто взять все данные
+
+                        $data = $this->model->get($tables[$otherKey], [
+                            'fields' => [
+                                $orderData['columns']['id_row'] . ' as id',
+                                $orderData['name'],
+                                $orderData['parent_id']
+                            ],
+                            'order' => $orderData['order']
+                        ]);
+
+                        if ($data){
+
+                            $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['name'] = 'выбрать';
+
+                            foreach ($data as $item){
+
+                                $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['sub'][] = $item;
+
+                                if (in_array($item['id'], $foreign))
+                                    $this->data[$tables[$otherKey]][$tables[$otherKey]][] = $item['id'];
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
 
         }
 

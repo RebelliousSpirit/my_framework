@@ -329,8 +329,15 @@ abstract class BaseModel extends BaseModelMethods
      * Возвращает инфо о полях таблицы
      * Возвращает массив вида
      * [
-     *      row_name => [],
-     *      row_name => [],
+     *    'id' => [
+     *       'Field' => 'id',
+     *       'Type' => 'int(11)',
+     *       'Null' => 'No',
+     *       'Key' => 'PRI',
+     *       'Default' => null,
+     *       'Extra' => 'auto_increment'
+     *    ],
+     *    id_row => 'id',
      *}
      * @param $table - таблица, информацию о полях которой нужно плучить
      * Например:
@@ -343,7 +350,7 @@ abstract class BaseModel extends BaseModelMethods
 
         if (!isset($this->tableRows[$table]) || !$this->tableRows[$table]){
 
-            // проверяем не пришла ли строка с именем талицы с псевдономом
+            // проверяем не пришла ли строка с именем талицы с псевдонимом
             $checkTable = $this->createTableAlias($table);
 
             // если данные о полях таблицы уже существуют

@@ -36,6 +36,8 @@ class addController extends BaseAdmin
 
         $this->checkPostData();
 
+        $this->createManyToMany();
+
     }
 
     /**

@@ -19,18 +19,8 @@ class IndexController extends BaseController
         $model = Model::instance();
 
         $res = $model->get('goods', [
-            'where' => ['id' => '10,11'],
-            'operand' => ['IN'],
-            'join' => [
-                'goods_filters' => [
-                    'on' => ['id', 'goods']
-                ],
-                'filters' => [
-                    'fields' => ['name'],
-                    'on' => [ 'filters','id']
-                ]
-            ],
-            'join_structure' => true
+            'where' => ['id' => '11, 10'],
+
         ]);
 
         exit;
