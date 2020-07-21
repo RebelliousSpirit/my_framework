@@ -8,15 +8,10 @@
     <title>Document</title>
 
     <?php
+        // правильная реализация
         $this->getStyles();
     ?>
 
-    <?//пример плохой реализации
-    // foreach ($this->styles as $style):?>
-<!--        <link rel="stylesheet" href="--><?//=$style?><!--">-->
-    <?// endforeach;
-
-    use core\base\settings\Settings; ?>
 </head>
 <body>
 <div class="vg-carcass vg-hide">
@@ -71,12 +66,12 @@
     </div>
     <div class="vg-main vg-right vg-relative">
         <div class="vg-wrap vg-firm-background-color1 vg-center vg-block vg-menu">
-            <? /* меню админки */ ?>
-            <? if ($this->menu): ?>
-                <? foreach ($this->menu as $table => $item ): ?>
-                    <?// текущая кнопка подсвечивается если имя таблицы из настроек совпадает с именем тетущей таблицы?>
+            <?php /* меню админки */ ?>
+            <?php if ($this->menu): ?>
+                <?php foreach ($this->menu as $table => $item ): ?>
+                    <?php// текущая кнопка подсвечивается если имя таблицы из настроек совпадает с именем тетущей таблицы?>
                     <a href="<?=$this->adminPath?>show/<?=$table?>"
-                       class="vg-wrap vg-element vg-full vg-center<? if ($table == $this->table) echo ' active';?>">
+                       class="vg-wrap vg-element vg-full vg-center<? if ($table === $this->table) echo ' active';?>">
                         <div class="vg-element vg-half  vg-center">
                             <div>
                                 <img src="<?=PATH . ADMIN_TEMPLATES?>img/<?=$item['img'] ? $item['img'] : 'pages.png'?>"
@@ -87,7 +82,7 @@
                             <span class="vg-text vg-firm-color5"><?=$item['name'] ? $item['name'] : $table?></span>
                         </div>
                     </a>
-                <? endforeach; ?>
-            <? endif; ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
 
         </div>

@@ -18,44 +18,26 @@ class addController extends BaseAdmin
 
     /**
      * Загрузка данных
+     * @throws \core\base\exceptions\RouteException
      */
     protected function inputData()
     {
         // если это не пользователь сайта
         if (!$this->userId) $this->execBase();
 
-        $this->createTableData();
+       $this->checkPostData();
 
-        $this->createRadio();
+       $this->createTableData();
 
-        $this->createForeignData();
+       $this->createForeignData();
 
-        $this->createOutputData();
+       $this->createMenuPosition();
 
-        $this->createMenuPosition();
+       $this->createRadio();
 
-        $this->checkPostData();
+       $this->createOutputData();
 
-        $this->createManyToMany();
-
-    }
-
-    /**
-     * Учебный метод для демонстрации множественной вставки в таблицу БД
-     * Вызвать можно в методе inputData()
-     */
-    protected function addTeachers()
-    {
-
-        $fields = [
-            ['name'=>'lena', 'img'=>'1user.png'],
-            ['name'=>'vika', 'img'=>'2user.png'],
-            ['name'=>'roma', 'img'=>'3user.png'],
-        ];
-
-        $this->model->add('teachers', [
-            'fields' => $fields,
-        ]);
+       $this->createManyToMany();
 
     }
 

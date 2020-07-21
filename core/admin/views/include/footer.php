@@ -1,7 +1,7 @@
             </div><!--.vg-main.vg-right-->
         </div><!--.vg-carcass-->
             <div class="vg-modal vg-center">
-                <?
+                <?php
                    // если есть сообщение о ошибке
                     if ($_SESSION['res']['answer']){
                         echo $_SESSION['res']['answer'];

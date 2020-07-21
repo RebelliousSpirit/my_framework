@@ -6,7 +6,7 @@
                 <div class="vg-element vg-padding-in-px">
                     <input type="submit" class="vg-text vg-firm-color1 vg-firm-background-color4 vg-input vg-button" value="Сохранить">
                 </div>
-                <?
+                <?php
                     // если опция можно удалить текущую запись и есть данные в таблице
                     if (!$this->noDelete && $this->data):
                 ?>
@@ -16,17 +16,16 @@
                             <span>Удалить</span>
                         </a>
                     </div>
-                <? endif; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-    <? if ($this->data): ?>
+    <?php if ($this->data): ?>
         <input type="hidden" name="<?= $this->columns['id_row']?>" value="<?=$this->data[$this->columns['id_row']]?>">
-    <? endif; ?>
-    <? // скрытое поле с именем таблицы нужно для проверки данных в методе checkPostData() класса BaseAdmin?>
+    <?php endif;?>
+    <?php // скрытое поле с именем таблицы нужно для проверки данных в методе checkPostData() класса BaseAdmin?>
     <input type="hidden" name="table" value="<?=$this->table?>">
-
-    <? foreach ($this->blocks as $class => $block){
+    <?php foreach ($this->blocks as $class => $block){
 
         // если отсутствуют настройки блоков в Settings.php
         if (is_int($class)) $class = 'vg-content';
@@ -38,6 +37,7 @@
                 if ($block){
 
                     foreach ($block as $row) {
+
                         foreach ($this->templateArr as $template => $items){
 
                             if (in_array($row, $items)){
@@ -48,18 +48,18 @@
                                     $_SERVER['DOCUMENT_ROOT'] . $this->formTemplatesPath . $template . '.php');
                                 }
 
-                            }
+                                break;
 
+                            }
                         }
                     }
-
                 }
 
             if ($class != 'vg-content') echo '</div>';
+            echo '</div>';
+        }
 
-        echo '</div>';
-
-    }?>
+    ?>
 
     <div class="vg-wrap vg-element vg-full">
         <div class="vg-wrap vg-element vg-full vg-firm-background-color4 vg-box-shadow">

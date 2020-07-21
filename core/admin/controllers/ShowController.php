@@ -17,7 +17,7 @@ class ShowController extends BaseAdmin
 
         $this->createData();
 
-        // get_defined_vars() - получает текущие своства
+        // get_defined_vars() - получает текущие свойства
         return $this->addExpansion(get_defined_vars());
 
     }

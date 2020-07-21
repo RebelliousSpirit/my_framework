@@ -1,1 +1,11 @@
 
+Fault: 21-07-2020 14:12:04 - Ошибка в SQL - запросе: SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME 
+                    FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = 'my_framework_one' AND TABLE_NAME = 'filters' 
+                        AND CONSTRAINT_NAME <> 'PRIMERY' AND REFERENCED_TABLE_NAME is not null  - 2006 MySQL server has gone away
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 21-07-2020 14:24:00 - Ошибка в SQL - запросе: SELECT COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME 
+                    FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = 'my_framework_one' AND TABLE_NAME = 'filters' 
+                        AND CONSTRAINT_NAME <> 'PRIMERY' AND REFERENCED_TABLE_NAME is not null  - 2006 MySQL server has gone away
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+

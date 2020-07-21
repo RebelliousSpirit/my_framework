@@ -1084,12 +1084,10 @@
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <foreign-key id="268" parent="233" name="teachers_students_id_fk">
+    <foreign-key id="268" parent="233" name="goods_filters_id_fk">
       <ColNames>parent_id</ColNames>
       <RefTableName>filters</RefTableName>
       <RefColNames>id</RefColNames>
-      <OnUpdate>set-null</OnUpdate>
-      <OnDelete>set-null</OnDelete>
     </foreign-key>
     <column id="269" parent="234" name="goods">
       <Position>1</Position>

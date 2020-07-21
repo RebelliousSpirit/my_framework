@@ -20,10 +20,8 @@ class IndexController extends BaseController
 
         $res = $model->get('goods', [
             'where' => ['id' => '11, 10'],
-
         ]);
 
-        exit;
     }
 
 }

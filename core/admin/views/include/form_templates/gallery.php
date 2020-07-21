@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="vg-wrap vg-element vg-full gallery_container">
-            <?/**
+            <?php/**
              * name="<?=$row?>[]" - при помощи такой записи передается массив данных
              * атрибут multiple - разрешает скачать несколько изображений
              */?>
@@ -18,22 +18,22 @@
                 <img src="<?=PATH . ADMIN_TEMPLATES?>img/plus.png" alt="plus">
                 <input class="gallery_img" style="display: none;" type="file" name="<?=$row?>[]" multiple>
             </label>
-            <?// вывод галерии?>
-            <?if($this->data[$row]):?>
-                <?$this->data[$row] = json_decode($this->data[$row])?>
+            <?php// вывод галерии?>
+            <?php if($this->data[$row]):?>
+                <?php$this->data[$row] = json_decode($this->data[$row])?>
                 <?foreach ($this->data[$row] as $img):?>
                     <div class="vg-dotted-square vg-center">
                         <img class="vg_delete" src="<?=PATH . UPLOAD_DIR . $img?>">
                     </div>
                 <?endforeach;?>
-                <?// пустые контейнеры,  которые показывает пользователю что можно закачать еще изображений ?>
-                <?
+                <?php// пустые контейнеры,  которые показывает пользователю что можно закачать еще изображений ?>
+                <?php
                     for ($i = 0; $i < 2; $i++ ){
                         echo '<div class="vg-dotted-square vg-center empty_container"></div>';
                     }
                 ?>
                 <?else:?>
-                <?
+                <?php
                 for ($i = 0; $i < 13; $i++ ){
                     echo '<div class="vg-dotted-square vg-center empty_container"></div>';
                 }

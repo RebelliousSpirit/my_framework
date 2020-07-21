@@ -10,11 +10,11 @@
         <div class="select-wrapper vg-element vg-full vg-left vg-no-offset">
             <div class="select-arrow-3 select-arrow-31"></div>
             <select name="<?=$row?>" class="vg-input vg-text vg-full vg-firm-color1">
-                <? foreach ($this->foreignData[$row] as $item):?>
+                <?php foreach ($this->foreignData[$row] as $item):?>
                     <option value="<?=$item['id']?>" <?=$this->data[$row] == $this->item['id'] ? 'selected' : ''?>>
                         <?=$item['name']?>
                     </option>
-                <? endforeach;?>
+                <?php endforeach;?>
             </select>
         </div>
     </div>

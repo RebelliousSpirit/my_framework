@@ -1,4 +1,4 @@
-<?/**
+<?php/**
  * Шаблон для добавления файлов
  * Input имеет ограничение по формату файлов.Возможно только скачивание только изображений.
  */
@@ -30,9 +30,9 @@
         </div>
         <div class="vg-wrap vg-element vg-full">
             <div class="vg-element vg-left img_show main_img_show">
-                <? if ($this->data[$row]): ?>
+                <?php if ($this->data[$row]): ?>
                 <img src="<?=PATH . UPLOAD_DIR . $this->data[$row]?>">
-                <? endif; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

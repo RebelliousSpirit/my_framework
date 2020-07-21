@@ -9,17 +9,17 @@
                 <span class="vg_subheader"><?=$this->translate[$row][1]?></span>
             </div>
             <div class="vg-wrap vg-element vg-fourth">
-                <?foreach ($this->foreignData[$row] as $key => $item):?>
-                    <?if(is_int($key)):?>
+                <?php foreach ($this->foreignData[$row] as $key => $item):?>
+                    <?php if(is_int($key)):?>
                         <label class="vg-element vg-full vg-center vg-left vg-space-between">
                             <span class="vg-text vg-half"><?=$item?></span>
                             <input type="radio" name="<?=$row?>" class="vg-input vg-half"
-                                   <?if (isset($this->data[$row]) && $this->data[$row] == $key) echo 'checked';
+                                   <?php if (isset($this->data[$row]) && $this->data[$row] == $key) echo 'checked';
                                    elseif (!isset($this->data[$row]) && $this->foreignData[$row]['default'] == $item) echo 'checked';?>
                                    value="<?=$key?>">
                         </label>
-                    <?endif;?>
-                <?endforeach;?>
+                    <?php endif;?>
+                <?php endforeach;?>
             </div>
         </div>
     </div>

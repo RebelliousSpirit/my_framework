@@ -116,6 +116,7 @@ abstract class BaseAdmin extends BaseController
         $this->footer = $this->render(ADMIN_TEMPLATES . 'include/footer');
 
         return $this->render(ADMIN_TEMPLATES. 'layout/default');
+
     }
 
     /**
@@ -223,7 +224,7 @@ abstract class BaseAdmin extends BaseController
     }
 
     /**
-     * Формирует данные вывода в блоках контентной части страницы админки.
+     * Формирует данные для вывода html-блоков контентной части страницы админки.
      * Добавляет в свойство this-blocks новые элементы согласно полям таблицы
      *
      * @param bool $settings - настройки текущего сайта или его расширения
@@ -253,6 +254,7 @@ abstract class BaseAdmin extends BaseController
         $default = array_keys($blocks)[0];
         // заполняем данные для формирования блоков
         foreach ($this->columns as $name => $item) {
+
             if ($name === 'id_row') continue;
 
             $insert = false;
@@ -270,6 +272,8 @@ abstract class BaseAdmin extends BaseController
             }
 
             if (!$insert) $this->blocks[$default][] = $name;
+            if (!$this->translate[$name]) $this->translate[$name][] = $name;
+
         }
 
         return;
