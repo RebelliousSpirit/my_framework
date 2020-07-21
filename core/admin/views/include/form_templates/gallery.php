@@ -20,7 +20,7 @@
             </label>
             <?php// вывод галерии?>
             <?php if($this->data[$row]):?>
-                <?php$this->data[$row] = json_decode($this->data[$row])?>
+                <?php $this->data[$row] = json_decode($this->data[$row])?>
                 <?foreach ($this->data[$row] as $img):?>
                     <div class="vg-dotted-square vg-center">
                         <img class="vg_delete" src="<?=PATH . UPLOAD_DIR . $img?>">
@@ -32,13 +32,13 @@
                         echo '<div class="vg-dotted-square vg-center empty_container"></div>';
                     }
                 ?>
-                <?else:?>
+                <?php else:?>
                 <?php
                 for ($i = 0; $i < 13; $i++ ){
                     echo '<div class="vg-dotted-square vg-center empty_container"></div>';
                 }
                 ?>
-            <?endif;?>
+            <?php endif;?>
         </div>
     </div>
 </div>
