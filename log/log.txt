@@ -9,3 +9,30 @@ Fault: 21-07-2020 14:24:00 - Ошибка в SQL - запросе: SELECT COLUMN
                         AND CONSTRAINT_NAME <> 'PRIMERY' AND REFERENCED_TABLE_NAME is not null  - 2006 MySQL server has gone away
 file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
 
+Fault: 22-07-2020 12:52:40 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,parent_id,visible,filters,content,date,datetime) VALUES ('Новинки','3','','1','Array','',NOW(),NOW()) - 1054 Unknown column 'filters' in 'field list'
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 22-07-2020 12:53:57 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,parent_id,visible,filters,content,date,datetime) VALUES ('Новинки','3','','1','Array','',NOW(),NOW()) - 1054 Unknown column 'filters' in 'field list'
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 22-07-2020 13:19:12 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,parent_id,visible,filters,content,date,datetime) VALUES ('Новинки','3','','1','Array','',NOW(),NOW()) - 1054 Unknown column 'filters' in 'field list'
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 22-07-2020 13:30:58 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,parent_id,visible,filters,content,date,datetime) VALUES ('Новинки','3','','1','Array','',NOW(),NOW()) - 1366 Incorrect integer value: '' for column 'parent_id' at row 1
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 22-07-2020 20:05:43 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,visible,filters,content,date,datetime) VALUES ('test1','1','1','Array','',NOW(),NOW()) - 1054 Unknown column 'filters' in 'field list'
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 23-07-2020 13:53:37 - Ошибка в SQL - запросе: INSERT INTO goods (name,menu_position,visible,filters,content,date,datetime) VALUES ('test2','4','1','Array','Функции MouseDown (), MouseMove () и MouseUp () вызываются при действиях мыши над холстом: зажатии кнопки мыши, передвижении курсора и отпускании кнопки соответственно. Как работают CheckSelection () и Update (), можно увидеть в полном коде в репозитории.',NOW(),NOW()) - 1054 Unknown column 'filters' in 'field list'
+file C:\OSPanel\domains\my-framework.loc\core\base\models\BaseModel.php In line 52
+
+Fault: 23-07-2020 14:17:26 - Отсутствует шаблон - core/admin/views/edit
+file C:\OSPanel\domains\my-framework.loc\core\base\controllers\BaseController.php In line 150
+
+Fault: 23-07-2020 14:17:32 - Отсутствует шаблон - core/admin/views/edit
+file C:\OSPanel\domains\my-framework.loc\core\base\controllers\BaseController.php In line 150
+
+Fault: 23-07-2020 14:18:19 - Отсутствует шаблон - core/admin/views/edit
+file C:\OSPanel\domains\my-framework.loc\core\base\controllers\BaseController.php In line 150
+

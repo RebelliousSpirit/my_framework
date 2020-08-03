@@ -16,11 +16,12 @@ class IndexController extends BaseController
      */
     protected function inputData () {
 
-        $model = Model::instance();
 
-        $res = $model->get('goods', [
-            'where' => ['id' => '11, 10'],
-        ]);
+    }
+
+    protected function outputData(){
+
+
 
     }
 

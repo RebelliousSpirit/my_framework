@@ -12,7 +12,7 @@ class FileEdit
     protected $directory;
 
     /**
-     *
+     * Добавляет файл
      *
      * @param bool $directory - директория хранилища пользовательских файлов
      * @return array
@@ -63,6 +63,8 @@ class FileEdit
     }
 
     /**
+     * Перемещает файл в директорию
+     *
      * @param $file -
      */
     protected function createFile($file){

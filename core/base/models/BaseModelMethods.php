@@ -269,6 +269,9 @@ abstract class BaseModelMethods
                     // если это вложенный запрос
                     if (strrpos($item, 'SELECT') === 0){
                         $where .= $table . $key . $operand . '(' . $item . ") $condition";
+                    }elseif ($item === null || $item === 'NULL'){
+                        if ($operand === '=') $where .= $table . $key . ' IS NULL ' .  $condition;
+                            else $where .= $table . $key . ' IS NOT NULL ' .  $condition;
                     }else{
                         $where .= $table . $key . $operand . "'" . addslashes($item) . "' $condition";
                     }
@@ -553,6 +556,8 @@ abstract class BaseModelMethods
     /**
      * Преобразует строку вида 'table_name  table_alias' в массив вида ['table' => 'table_name',
      * 'alias' => 'table_alias']
+     * Псевдонимы необходимы в случае когда поля таблицы по внешнему ключу ссылаются на первные ключи полей
+     * своей же таблицы
      *
      * @param string $table - имя таблицы
      * @return array

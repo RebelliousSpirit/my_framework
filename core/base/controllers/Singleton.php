@@ -13,6 +13,7 @@ namespace core\base\controllers;
  */
 trait Singleton
 {
+
     static private $_instance;
 
     private function __clone()

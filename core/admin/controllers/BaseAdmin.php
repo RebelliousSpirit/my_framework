@@ -10,8 +10,8 @@ use libraries\FileEdit;
 use mysql_xdevapi\Table;
 
 /**
- * Базовый контроллер для производных контрллеров админ. части сайта.
- * Формирует статические части страницы админки сайта(шапки и подвала), а также контент
+ * Базовый контроллер от которого наследуются другие контроллеры админ. части сайта.
+ * Формирует статические части документа админ. части сайта(шапки и подвала), а также контент
  * ной части по умолчанию, если в производных контроллерах заранее не сформрована контентная часть страницы. *
  * Позволяет подключать расширения через метод addExpansion.Отключает кэширование браузера(при обновлении скриптов и
  * стилей не будет необходимости обновлять кэш браузера).
@@ -153,13 +153,15 @@ abstract class BaseAdmin extends BaseController
 
         if (!$this->table){
             // Например: table = 'teachers'
+            // если имя таблицы пришло в Url-запросе
             if ($this->parameters) $this->table = array_keys($this->parameters)[0];
-                else{
+                else{ // иначе переб имя таблицы из натсроек по умолчанию
                     if (!$settings) $settings = Settings::instance();
                     $this->table = $settings->get('defaultTable');
                 }
         }
 
+        // затем получаем поля этой таблицы
         $this->columns = $this->model->showColumns($this->table);
 
         if (!$this->columns) new RouteException('Не найдены поля в таблице' . $this->table, 2);
@@ -303,14 +305,17 @@ abstract class BaseAdmin extends BaseController
     }
 
     /**
-     * Проверяет данные пришедшие методом POST
+     * Проверяет данные пришедшие методом POST и дабавляет их в БД
      *
      * @param bool $settings
      */
     protected function checkPostData($settings = false){
 
+        // если пришел post-запрос
         if ($this->isPost()){
 
+            // проводит санитизацию данных пришедших методом post и заодно сохраняет их в текущую сессию(для удобства
+            // пользователя)
             $this->clearPostFields($settings);
             $this->table = $this->clearStr($_POST['table']);
             // убираем переменную table из-за ненадомности
@@ -361,6 +366,8 @@ abstract class BaseAdmin extends BaseController
             $str_res = mb_str_replace('$2', $count, $str_res);
 
             $_SESSION['res']['answer'] = '<div class="error">' . $str_res . ' ' . $answer . '</div>';
+
+            // добавляем текущие данные в сессию, для того чтобы пользватель не вводил их снова
             $this->addSessionData($arr);
 
         }
@@ -478,16 +485,20 @@ abstract class BaseAdmin extends BaseController
         // если в post-данных придет id записи, то это означает что ее нужно редактировать
         // и $method станет равным 'edit', т.е применятся метод редактирования записи
         if ($_POST[$this->columns['id_row']]){
+
             // приводим к числовому типу если id в таблице БД в виде числа,
             // очищаем от тегов и крайних пробелов если id в таблице БД в виде числового-строкового вида(Например: 'a1')
             $id = is_numeric($_POST[$this->columns['id_row']]) ? $this->clearNum($_POST[$this->columns['id_row']])
                 : $this->clearStr($_POST[$this->columns['id_row']]);
+
             if ($id){
                 $where = [$this->columns['id_row'] => $id];
                 $method = 'edit';
             }
+
         }
 
+        // добавляем дату изменения записи
         foreach ($this->columns as $key => $item){
             if ($key === 'id_row' ) continue;
 
@@ -500,8 +511,9 @@ abstract class BaseAdmin extends BaseController
 
         $this->createAlias($id);
 
-        $this->updateMenuPosition();
+        $this->updateMenuPosition($id);
 
+        // получаем поля которые отсутствуют в таблице
         $except = $this->checkExceptFields();
 
         $res_id = $this->model->$method($this->table, [
@@ -521,6 +533,9 @@ abstract class BaseAdmin extends BaseController
             $answerSuccess =  $this->messages['editSuccess'];
             $answerFail =  $this->messages['editFail'];
         }
+
+        // добавляем данные связей по типу многие ко многим
+        $this->checkManyToMany();
 
         // передать в расширения текущие переменные
         $this->addExpansion(get_defined_vars());
@@ -620,7 +635,26 @@ abstract class BaseAdmin extends BaseController
         }
     }
 
-    protected function updateMenuPosition(){
+    /**
+     * Обновляет позиции записей
+     *
+     * @param bool $id - идентефикатор записи, позицю которой нужно обновить
+     */
+    protected function updateMenuPosition($id = false){
+
+        if (isset($_POST['menu_position'])){
+
+            $where = false;
+
+            if ($id && $this->columns['id_row']) $where = [$this->columns['id_row'] => $id];
+
+            if (array_key_exists('parent_id', $_POST)){
+                $this->model->updateMenuPosition($this->table, 'menu_position', $where, $_POST['menu_position'], ['where' => 'parent_id']);
+            } else {
+                $this->model->updateMenuPosition($this->table, 'menu_position', $where, $_POST['menu_position']);
+            }
+
+        }
 
     }
 
@@ -633,6 +667,7 @@ abstract class BaseAdmin extends BaseController
      * @return array - массив с именами полей, которые нужно исключить
      */
     protected function checkExceptFields($arr = []){
+
         if (!$arr) $arr = $_POST;
 
         $except = [];
@@ -644,6 +679,7 @@ abstract class BaseAdmin extends BaseController
         }
 
         return $except;
+
     }
 
     /**
@@ -840,6 +876,8 @@ abstract class BaseAdmin extends BaseController
 
                         if ($data){
 
+                            $this->foreignData[$tables[$otherKey]][$tables[$otherKey]]['name'] = 'выбрать';
+
                             foreach ($data as $item){
 
                                 // если нужно выбрать только корневые типы полей
@@ -1035,6 +1073,241 @@ abstract class BaseAdmin extends BaseController
             }
 
         }
+
+    }
+
+    /**
+     * Добавляет данные в таблицу связей по типу многие ко многим
+     *
+     * @param bool $settings - настройки сайта или его расширения
+     */
+    protected function checkManyToMany($settings = false){
+
+        if (!$settings) $settings = $this->settings ?: Settings::instance();
+
+        $manyToMany = $settings->get('manyToMany');
+
+        if($manyToMany){
+
+            foreach ($manyToMany as $mTable => $tables){
+
+                $targetKey = array_search($this->table, $tables);
+
+                if ($targetKey !== false){
+
+                    $otherKey = $targetKey ? 0 : 1; // альтернативная запись(int) !$targetKey ? 0 : 1;
+
+                    $checkbox_list = $settings::get('templateArr')['checkbox_list'];
+
+                    if (!$checkbox_list || !in_array($targetKey[$otherKey], $checkbox_list)) continue;
+
+                    // получаем поля второй таблицы
+                    $columns = $this->model->showColumns($tables[$otherKey]);
+
+                    // поле целевой таблицы
+                    $targetRow = $this->table . '_' . $this->columns['id_row'];
+
+                    // поле связанное с полем целевой таблицы
+                    $otherRow = $tables[$otherKey] . '_' . $columns['id_row'];
+
+                    // удаляем все что связано с запрашиваемой записью
+                    $this->model->delete($mTable, [
+                       'where' => [$targetRow => $_POST[$this->columns['id_row']]]
+                    ]);
+
+                    if ($_POST[$tables[$otherKey]]){
+
+                        $insertArr = [];
+
+                        $i = 0;
+
+                        foreach ($_POST[$tables[$otherKey]] as $value){
+
+                            foreach ($value as $item){
+
+                                $insertArr[$i][$targetRow] = $_POST[$this->columns['id_row']];
+                                $insertArr[$i][$otherKey] = $item;
+
+                                $i++;
+
+                            }
+
+                        }
+
+                        if ($insertArr){
+
+                            $this->model->add($mTable, [
+                                'fields' => $insertArr
+                            ]);
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * Вспомагательный метод для метода createForeignData
+     * Создает внешние данные, с помощью которых формируется страница добавления записей
+     *
+     * @param $arr - массив с данными о внешних ключах текущей таблицы
+     * @param $rootItems - записи таблицы, которые будут корневыми для других записей т.е родительскими
+     */
+    protected function createForeignProperties($arr, $rootItems)
+    {
+
+        if (in_array($this->table, $rootItems['tables'])){
+            $this->foreignData[$arr['COLUMN_NAME']][0]['id'] = 'NULL';
+            $this->foreignData[$arr['COLUMN_NAME']][0]['name'] = $rootItems['name'];
+        }
+
+        $orderData = $this->createOrderData($arr['REFERENCED_TABLE_NAME']);
+
+        // исключаем случай, когда внешнии ключи таблицы ссылаются на первичные ключи своей же таблицы
+        // т.е таблица сслыается связана с собой же
+        if ($this->data){
+            if ($arr['REFERENCED_TABLE_NAME'] === $this->table){
+                $where[$this->columns['id_row']] = $this->data[$this->columns['id_row']];
+                $operand[] = '<>';
+            }
+        }
+
+        $foreign = $this->model->get($arr['REFERENCED_TABLE_NAME'],[
+            'fields' => [$arr['REFERENCED_COLUMN_NAME'] . ' as id', $orderData['name'], $orderData['parent_id']],
+            'where' => $where,
+            'operand' => $operand,
+            'order' => $orderData['order']
+        ]);
+
+        if($foreign){
+
+            if ($this->foreignData[$arr['COLUMN_NAME']]){
+                foreach ( $foreign as $value){
+                    $this->foreignData[$arr['COLUMN_NAME']][] = $value;
+                }
+            } else {
+                $this->foreignData[$arr['COLUMN_NAME']][] = $foreign;
+            }
+
+        }
+
+    }
+
+    /**
+     * получаем данные о первичных ключах с которыми связаны внешнии ключи текущей таблицы.
+     *
+     * @param bool $settings - настройки сайта или плагина
+     */
+    protected function createForeignData($settings = false)
+    {
+
+        if (!$settings) $settings = Settings::instance();
+
+        // таблицы имеющие корневую директорию
+        $rootItems = $settings->get('rootItems');
+
+        // данные о поле содержащий внешнии ключи текущей таблицы БД
+        $keys = $this->model->showForeignKeys($this->table);
+
+        if ($keys){
+
+            foreach ($keys as $item) {
+                $this->createForeignProperties($item, $rootItems);
+            }
+
+        } elseif ($this->columns['parent_id']){
+
+            $arr['COLUMN_NAME'] = 'parent_id';
+            $arr['REFERENCED_COLUMN_NAME'] = $this->columns['id_row'];
+            $arr['REFERENCED_TABLE_NAME'] = $this->table;
+
+            $this->createForeignProperties($arr, $rootItems);
+
+        }
+
+        return;
+
+    }
+
+    /**
+     * Записывает в $this->foreignData['menu_position'] позиции записей в текущей таблицы
+     * Например: если в таблице 2 записи, вернется массив вида
+     * [
+     *      0 => [id=>1, name=>1],
+     *      1 => [id=>2, name=>2],
+     *      2 => [id=>3, name=>3],
+     * ]
+     * Добавляется доп.ячейка т.к эти данные будут использоватся в функционале добавления новой записи.
+     * Т.е резервируется доп. место для добавления новой записи.
+     * @param bool $settings настройки сайта или плагина
+     */
+    protected function createMenuPosition($settings = false)
+    {
+
+        if ($this->columns['menu_position']){
+
+            if (!$settings) $settings = Settings::instance();
+            $rootItems = $settings::get('rootItems');
+
+            if ($this->columns['parent_id']){
+
+                if (in_array($this->table, $rootItems['tables'])){
+                    $where = 'parent_id IS NULL OR parent_id = 0';
+                } else {
+
+                    $parent = $this->model->showForeignKeys($this->table, 'parent_id')[0];
+
+                    if($parent){
+
+                        if ($this->table === $parent['REFERENCED_TABLE_NAME']){
+                            $where = 'parent_id IS NULL OR parent_id = 0';
+                        } else {
+
+                            $columns = $this->model->showColumns($parent['REFERENCED_TABLE_NAME']);
+
+                            if($columns['parent_id']){
+                                $order[] = 'parent_id';
+                            } else {
+                                $order[] = $parent['REFERENCED_COLUMN_NAME'];
+                            }
+
+                            $id = $this->model->get($parent['REFERENCED_TABLE_NAME'], [
+                                'fields' => [$parent['REFERENCED_COLUMN_NAME']],
+                                'order' => $order,
+                                'limit' => 1
+                            ])[0][$parent['REFERENCED_COLUMN_NAME']];
+
+                            if ($id) $where = ['parent_id' => $id];
+
+                        }
+
+                    } else {
+                        $where = 'parent_id IS NULL OR parent_id = 0';
+                    }
+
+                }
+            }
+
+            $menu_pos = $this->model->get($this->table, [
+                    'fields' => ['COUNT(*) as count'],
+                    'where' => $where,
+                    'no_concat' => true,
+                ])[0]['count'] + 1;
+
+            for($i = 1; $i <= $menu_pos; $i++){
+                $this->foreignData['menu_position'][$i - 1]['id'] = $i;
+                $this->foreignData['menu_position'][$i - 1]['name'] = $i;
+            }
+
+        }
+
+        return;
 
     }
 

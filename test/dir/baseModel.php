@@ -96,8 +96,11 @@ abstract class BaseModel extends BaseModelMethods
      * [
      *   'fields' => ['id', 'name'],
      *   'where' => ['fio' => 'smirnova', 'name' => 'masha, maria, bob', 'surname' => 'olegovna'],
-     *   'no_concat' => true, Если true не присоединять table к полям и where
+     *   'no_concat' => true,// Если true не присоединять в запросах подстроку с именем таблицы к именам полей в 'where'
+     *                       // применяется когда нужно передать например в 'fields' массив ['COUNT(*) as count']
      *   'operand' => ['=', '<>'], // последний элемент массива автоматически поддставляется в другие отношения
+     *                             // операнды в SQL: '=' - равно, '<>' - не равно, 'ON' или 'NOT IN' - множественное сравнение
+     *                             // например запрос вида: 'SELECT * FROM table WHERE name ON ('VIka', 'Oleg')'
      *   'condition' => ['AND', 'OR'], // последний элемент массива автоматически поддставляется в другие отношения
      *   'order' => ['fio', 'name'],
      *   'order_direction' => ['ASC', 'DESC'], // последний элемент массива автоматически поддставляется в другие отношения

@@ -193,9 +193,9 @@ abstract class BaseModel extends BaseModelMethods
         if (!$set['files'] && !$set['fields']) return false;
 
         $set['return_id'] =  $set['return_id'] ? true : false;
-        $set['excerpt'] = (is_array($set['excerpt']) && !empty($set['excerpt'])) ? $set['excerpt'] : false;
+        $set['except'] = (is_array($set['except']) && !empty($set['except'])) ? $set['except'] : false;
 
-        $insert_arr = $this->createInsert($set['fields'], $set['files'],$set['excerpt']);
+        $insert_arr = $this->createInsert($set['fields'], $set['files'],$set['except']);
 
 
         //Например: 'INSERT INTO table_name (row_name1, row_name2, date) VALUES (value1, value2, NOW())'

@@ -6,10 +6,35 @@ namespace core\admin\controllers;
 
 class EditController extends BaseAdmin
 {
+    // это свойство указывается в форме страницы, указывает в какой контроллер
+    // отправлять ее данные
+    protected $action = 'add';
 
     protected function inputData()
     {
-       if (!$this->userId) $this->execBase();
+        if (!$this->userId) $this->execBase();
+
+        // проводим проверку post-данных, затем их добавляем(редактирование.добавление) в таблицу БД
+        // записываем в текущую сессию для удобства пользователя
+        $this->checkPostData();
+
+        // получаем имя таблицы и ее поля
+        $this->createTableData();
+
+        $this->createForeignData();
+
+        $this->createMenuPosition();
+
+        $this->createRadio();
+
+        $this->createOutputData();
+
+        // указываем какой шаблон подключить. Для контроллеров EditController и AddController
+        // используется один и тот же шаблон core/admin/views/add.php
+        $this->template = ADMIN_TEMPLATES . 'add';
+
+        $this->createManyToMany();
+
 
     }
 
